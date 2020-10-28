@@ -96,7 +96,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   // enable_ultrasound();
-  initialize_state_machine();
+  state_t current_state = initialize_state_machine();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,26 +105,28 @@ int main(void)
   char dist_str[] = "Distance: %d\n\r";
   char state_str[] = "State: %d\n\r";
   char buffer[32] = { 0 };
+  uint8_t dir = 0;
   state_machine_params_t params =
   {
-	.distance = 10
+	.distance = 35
   };
-  state_t next_state;
   while (1)
   {
 	  size = snprintf(buffer, 32, dist_str, params.distance);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
-	  size = snprintf(buffer, 32, state_str, next_state);
+	  size = snprintf(buffer, 32, state_str, current_state);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
-	  next_state = update_state_machine(params);
-	  params.distance = params.distance - 1;
+	  current_state = update_state_machine(params);
+	  params.distance = params.distance + ((dir == 1) * 2) - 1;
 
-	  if (params.distance == 0)
-		  break;
+	  if (params.distance == 29)
+		  dir = 1;
+	  else if (params.distance == 31)
+		  dir = 0;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(2000);
+	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
