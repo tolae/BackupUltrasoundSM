@@ -4,6 +4,7 @@
 #include "main.h"
 
 #define HYSTERESIS 2 // cm
+#define STATE_MACHINE_TRANSITION_TERMINATOR_DECL {-1, EMPTY, 0}
 
 typedef enum
 {
@@ -16,36 +17,32 @@ typedef enum
 	EMPTY
 } transition_type_t;
 
-typedef enum
-{
-	NO_ALERT = 0,
-	LOW_ALERT,
-	MEDIUM_ALERT,
-	HIGH_ALERT,
-	CRITICAL_ALERT,
-	END_STATE
-} state_t;
-
 typedef struct
 {
-	uint32_t threshold;
+	int32_t threshold;
 	transition_type_t type;
-	state_t next_state;
+	int32_t next_state;
 } transition_t;
 
 typedef struct
 {
-	uint32_t distance;
+	int32_t distance;
 } state_machine_params_t;
 
 typedef struct
 {
-	state_t state;
+	int32_t state;
 	void (*state_execution) (void);
 	transition_t transitions[];
 } state_machine_states_t;
 
-state_t initialize_state_machine();
-state_t update_state_machine(state_machine_params_t params);
+typedef struct
+{
+	uint32_t hysteresis;
+	state_machine_states_t** state_machine;
+} state_machine_config_t;
+
+int32_t initialize_state_machine(state_machine_config_t config);
+int32_t update_state_machine(state_machine_params_t params);
 
 #endif

@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include "ultrasound.h"
 #include "state_machine.h"
+#include "state_machine_impl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,7 +97,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   // enable_ultrasound();
-  state_t current_state = initialize_state_machine();
+  state_t current_state = initialize_state_machine(my_state_machine_config);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,11 +113,11 @@ int main(void)
   };
   while (1)
   {
+	  current_state = update_state_machine(params);
 	  size = snprintf(buffer, 32, dist_str, params.distance);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
 	  size = snprintf(buffer, 32, state_str, current_state);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
-	  current_state = update_state_machine(params);
 	  params.distance = params.distance + ((dir == 1) * 2) - 1;
 
 	  if (params.distance == 29)
