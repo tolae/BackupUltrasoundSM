@@ -81,6 +81,7 @@ state_machine_states_t critical_alert_state =
 	}
 };
 
+/* State Machine State Pointer-Array */
 state_machine_states_t* my_states[END_STATE] =
 {
 	&no_alert_state,
@@ -90,10 +91,48 @@ state_machine_states_t* my_states[END_STATE] =
 	&critical_alert_state
 };
 
+/* Final State Machine Configuration */
 state_machine_config_t my_state_machine_config =
 {
 	.hysteresis = 2,
 	.state_machine = my_states,
 };
+
+/* State Machine Function Implementation */
+void no_alert_func()
+{
+	HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+}
+
+void low_alert_func()
+{
+	HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
+}
+
+void medium_alert_func()
+{
+	HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
+}
+
+void high_alert_func()
+{
+	HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+}
+
+void critical_alert_func()
+{
+	/* The red flashing portion is handled inside TIM2 timer callback. */
+	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+}
+
+/* Used to handle the flashing portion of the critical alert state */
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+}
 
 #endif
