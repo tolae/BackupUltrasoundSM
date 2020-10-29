@@ -63,6 +63,8 @@ int32_t update_state_machine(state_machine_params_t params)
 		update_hysteresis_thresholds(transition, params);
 	}
 
+	/* Execute the transition's function */
+	transition.triggering_transition.transition_func();
 	/* Execute the next state's function */
 	transition.next_state->state_execution();
 	/* Update the state machine */
@@ -131,7 +133,6 @@ void update_hysteresis_thresholds(state_machine_transition_t next_state, state_m
 
 uint32_t check_transition(transition_t transition, state_machine_params_t params)
 {
-	int something;
 	uint32_t hysteresis_is_active = (hysteresis_config.returning_state == transition.next_state);
 	switch(transition.type)
 	{
@@ -151,3 +152,6 @@ uint32_t check_transition(transition_t transition, state_machine_params_t params
 		return 0;
 	}
 }
+
+/* Empty function for transitions that have no functionality. */
+void NO_TRANS_FUNC() {}

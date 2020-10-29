@@ -1,6 +1,7 @@
 #ifndef _STATE_MACHINE_IMPL_H
 #define _STATE_MACHINE_IMPL_H
 
+#include "main.h"
 #include "state_machine.h"
 
 /* State Machine States */
@@ -20,6 +21,8 @@ void low_alert_func();
 void medium_alert_func();
 void high_alert_func();
 void critical_alert_func();
+void critical_alert_trans_out_func();
+void critical_alert_trans_self_func();
 
 /* States */
 /* Self transitions are implied via failure to transition */
@@ -29,7 +32,7 @@ state_machine_states_t no_alert_state =
 	.state_execution = no_alert_func,
 	.transitions =
 	{
-		{30, LT_EQUALS, LOW_ALERT},
+		{30, LT_EQUALS, LOW_ALERT, NO_TRANS_FUNC},
 		STATE_MACHINE_TRANSITION_TERMINATOR_DECL
 	}
 };
@@ -40,8 +43,8 @@ state_machine_states_t low_alert_state =
 	.state_execution = low_alert_func,
 	.transitions =
 	{
-		{30, GREATER_THAN, NO_ALERT},
-		{20, LT_EQUALS, MEDIUM_ALERT},
+		{30, GREATER_THAN, NO_ALERT, NO_TRANS_FUNC},
+		{20, LT_EQUALS, MEDIUM_ALERT, NO_TRANS_FUNC},
 		STATE_MACHINE_TRANSITION_TERMINATOR_DECL
 	}
 };
@@ -52,8 +55,8 @@ state_machine_states_t medium_alert_state =
 	.state_execution = medium_alert_func,
 	.transitions =
 	{
-		{20, GREATER_THAN, LOW_ALERT},
-		{12, LT_EQUALS, HIGH_ALERT},
+		{20, GREATER_THAN, LOW_ALERT, NO_TRANS_FUNC},
+		{12, LT_EQUALS, HIGH_ALERT, NO_TRANS_FUNC},
 		STATE_MACHINE_TRANSITION_TERMINATOR_DECL
 	}
 };
@@ -64,8 +67,8 @@ state_machine_states_t high_alert_state =
 	.state_execution = high_alert_func,
 	.transitions =
 	{
-		{12, GREATER_THAN, MEDIUM_ALERT},
-		{8, LT_EQUALS, CRITICAL_ALERT},
+		{12, GREATER_THAN, MEDIUM_ALERT, NO_TRANS_FUNC},
+		{8, LT_EQUALS, CRITICAL_ALERT, NO_TRANS_FUNC},
 		STATE_MACHINE_TRANSITION_TERMINATOR_DECL
 	}
 };
@@ -76,7 +79,8 @@ state_machine_states_t critical_alert_state =
 	.state_execution = critical_alert_func,
 	.transitions =
 	{
-		{8, GREATER_THAN, HIGH_ALERT},
+		{8, GREATER_THAN, HIGH_ALERT, critical_alert_trans_out_func},
+		{8, LT_EQUALS, CRITICAL_ALERT, critical_alert_trans_self_func},
 		STATE_MACHINE_TRANSITION_TERMINATOR_DECL
 	}
 };
@@ -127,6 +131,16 @@ void critical_alert_func()
 {
 	/* The red flashing portion is handled inside TIM2 timer callback. */
 	HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+}
+
+void critical_alert_trans_out_func()
+{
+	HAL_TIM_OC_Stop_IT(&htim2, TIM_CHANNEL_2);
+}
+
+void critical_alert_trans_self_func()
+{
+	HAL_TIM_OC_Start_IT(&htim2, TIM_CHANNEL_2);
 }
 
 /* Used to handle the flashing portion of the critical alert state */

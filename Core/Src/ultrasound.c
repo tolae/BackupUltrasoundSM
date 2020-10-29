@@ -29,10 +29,10 @@ uint32_t get_read_us()
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	/* Only htim2 is configured for callbacks */
-	last_read_us = timer_triggers_us[1];
+	last_read_us = timer_triggers_us[1] - timer_triggers_us[0];
 }
 
 void HAL_TIM_IC_CaptureHalfCpltCallback(TIM_HandleTypeDef *htim)
 {
-	htim->Instance->CNT = 0;
+//	htim->Instance->CNT = 0;
 }

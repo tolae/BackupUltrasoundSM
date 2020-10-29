@@ -96,7 +96,7 @@ int main(void)
   MX_TIM5_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  // enable_ultrasound();
+   enable_ultrasound();
   state_t current_state = initialize_state_machine(my_state_machine_config);
   /* USER CODE END 2 */
 
@@ -106,28 +106,22 @@ int main(void)
   char dist_str[] = "Distance: %d\n\r";
   char state_str[] = "State: %d\n\r";
   char buffer[32] = { 0 };
-  uint8_t dir = 0;
   state_machine_params_t params =
   {
-	.distance = 35
+	.distance = 400
   };
   while (1)
   {
+	  params.distance = get_read_cm();
 	  current_state = update_state_machine(params);
 	  size = snprintf(buffer, 32, dist_str, params.distance);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
 	  size = snprintf(buffer, 32, state_str, current_state);
 	  HAL_UART_Transmit(&huart2, (uint8_t *)buffer, size, 0xFFFF);
-	  params.distance = params.distance + ((dir == 1) * 2) - 1;
-
-	  if (params.distance == 29)
-		  dir = 1;
-	  else if (params.distance == 31)
-		  dir = 0;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(1000);
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
