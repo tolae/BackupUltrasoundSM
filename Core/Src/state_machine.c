@@ -43,7 +43,11 @@ state_machine_state_t** state_machine = NULL;
 
 /* Private Functions */
 
-/** Finds the next state based on the given parameters. */
+/** Finds the next state based on the given parameters.
+ *
+ * @params params The update parameters.
+ * @returns A transition if required. Otherwise the current state and terminator.
+ */
 transition_t find_next_state(state_machine_params_t params);
 
 /** Updates the hysteresis object.
@@ -51,14 +55,24 @@ transition_t find_next_state(state_machine_params_t params);
  * The hysteresis is designed to only be active when within the transition
  * bounds AFTER a transition. Once it leaves those bounds AFTER a transition,
  * the hysteresis turns off and no longer affects the transition thresholds.
+ *
+ * This function will return immediately if the hysteresis is disabled.
+ *
+ * @params next_state The next state transition that was found.
+ * @params params The update parameters.
  */
 void update_hysteresis_thresholds(
 	transition_t next_state,
 	state_machine_params_t params
 );
 
-/** Checks to see if a transition is necessary. */
-uint32_t check_transition(
+/** Checks to see if a transition is necessary.
+ *
+ * @param transition The transition to verify.
+ * @param params The update parameters to compare against.
+ * @returns A boolean based on the transition comparator type.
+ */
+uint8_t check_transition(
 	state_machine_transition_t transition,
 	state_machine_params_t params
 );
@@ -183,7 +197,7 @@ void update_hysteresis_thresholds(
 	}
 }
 
-uint32_t check_transition(
+uint8_t check_transition(
 	state_machine_transition_t transition,
 	state_machine_params_t params
 )

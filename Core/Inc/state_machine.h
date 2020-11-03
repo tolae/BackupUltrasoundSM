@@ -115,6 +115,9 @@ void STATE_MACHINE_NO_FUNC();
 /** Initializes the state machine with the given configuration.
  *
  * Only after this function is called can the state machine be used.
+ *
+ * @params config A list of states and a hysteresis value.
+ * @returns The initial state for the state machine.
  */
 state_machine_state_enum_t initialize_state_machine(state_machine_config_t config);
 
@@ -122,6 +125,9 @@ state_machine_state_enum_t initialize_state_machine(state_machine_config_t confi
  *
  * This should be called as frequently as desired. It will handle state
  * transitions as well as state calls.
+ *
+ * @params params The state machine parameters to update with.
+ * @returns The updated state machine state or -1 if uninitialized.
  */
 state_machine_state_enum_t update_state_machine(state_machine_params_t params);
 

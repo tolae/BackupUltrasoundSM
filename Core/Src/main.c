@@ -27,9 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <ultrasound_backup_state_machine.h>
 #include "ultrasound.h"
 #include "state_machine.h"
-#include "state_machine_impl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
