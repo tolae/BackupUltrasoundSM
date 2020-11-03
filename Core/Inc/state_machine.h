@@ -5,8 +5,23 @@
 #include "main.h"
 
 /* Defines */
+
+/* Value for disabled hysteresis */
+#define HYSTERESIS_DISABLED 0
+
+/* The initial state for any state machine should be 0. */
+#define INITIAL_STATE 0
+
+/** An invalid state for a state machine should be negative.
+ *
+ * This does NOT mean error states should be negative. A negative
+ * state indicates an internal error to the state machine process
+ * or a null state.
+ */
+#define INVALID_STATE -1
+
 #define STATE_MACHINE_TRANSITION_TERMINATOR_DECL \
-	{ {-1}, EMPTY, 0, STATE_MACHINE_NO_FUNC}
+	{ {INVALID_STATE}, EMPTY, 0, STATE_MACHINE_NO_FUNC}
 
 /* Typedefs */
 
@@ -41,7 +56,9 @@ typedef void (*state_machine_func_t) (void);
 
 /** State machine state type
  *
- * Defines that a state machine state should be an integer.
+ * Defines that a state machine state should be an integer. Used since an
+ * enum cannot be typedef'd without an implementation nor check if a typedef
+ * has been made or not at compile time.
  */
 typedef int32_t state_machine_state_enum_t;
 
@@ -99,13 +116,13 @@ void STATE_MACHINE_NO_FUNC();
  *
  * Only after this function is called can the state machine be used.
  */
-int32_t initialize_state_machine(state_machine_config_t config);
+state_machine_state_enum_t initialize_state_machine(state_machine_config_t config);
 
 /** Updates the state machine with the new parameters.
  *
  * This should be called as frequently as desired. It will handle state
  * transitions as well as state calls.
  */
-int32_t update_state_machine(state_machine_params_t params);
+state_machine_state_enum_t update_state_machine(state_machine_params_t params);
 
 #endif

@@ -2,7 +2,8 @@
 #include "tim.h"
 
 /* Constants */
-const state_machine_transition_t STATE_MACHINE_TRANSITION_TERMINATOR = STATE_MACHINE_TRANSITION_TERMINATOR_DECL;
+const state_machine_transition_t STATE_MACHINE_TRANSITION_TERMINATOR =
+	STATE_MACHINE_TRANSITION_TERMINATOR_DECL;
 
 /* Private Structs */
 
@@ -32,8 +33,8 @@ state_machine_state_t* previous_state = NULL;
 state_machine_state_t* current_state = NULL;
 state_machine_hysteresis_config_t hysteresis_config =
 {
-	.hysteresis = 0,
-	.returning_state = -1,
+	.hysteresis = HYSTERESIS_DISABLED,
+	.returning_state = INVALID_STATE,
 	.triggered_transition = STATE_MACHINE_TRANSITION_TERMINATOR_DECL,
 };
 
@@ -51,28 +52,34 @@ transition_t find_next_state(state_machine_params_t params);
  * bounds AFTER a transition. Once it leaves those bounds AFTER a transition,
  * the hysteresis turns off and no longer affects the transition thresholds.
  */
-void update_hysteresis_thresholds(transition_t next_state, state_machine_params_t params);
+void update_hysteresis_thresholds(
+	transition_t next_state,
+	state_machine_params_t params
+);
 
 /** Checks to see if a transition is necessary. */
-uint32_t check_transition(state_machine_transition_t transition, state_machine_params_t params);
+uint32_t check_transition(
+	state_machine_transition_t transition,
+	state_machine_params_t params
+);
 
 /* Public Function Implementations */
 
-int32_t initialize_state_machine(state_machine_config_t config)
+state_machine_state_enum_t initialize_state_machine(state_machine_config_t config)
 {
 	state_machine = config.state_machine;
 
-	current_state = state_machine[0];
-	previous_state = state_machine[0];
+	current_state = state_machine[INITIAL_STATE];
+	previous_state = state_machine[INITIAL_STATE];
 	hysteresis_config.hysteresis = config.hysteresis;
-	hysteresis_config.returning_state = -1;
+	hysteresis_config.returning_state = INVALID_STATE;
 	current_state->state_execution();
 	return current_state->state;
 }
 
-int32_t update_state_machine(state_machine_params_t params)
+state_machine_state_enum_t update_state_machine(state_machine_params_t params)
 {
-	if (state_machine == NULL) return;
+	if (state_machine == NULL) return INVALID_STATE;
 
 	transition_t transition;
 
@@ -124,10 +131,17 @@ transition_t find_next_state(state_machine_params_t params)
 	return state_machine_update;
 }
 
-void update_hysteresis_thresholds(transition_t next_state, state_machine_params_t params)
+void update_hysteresis_thresholds(
+	transition_t next_state,
+	state_machine_params_t params
+)
 {
+	int32_t threshold;
+
 	/* Check if hysteresis is active */
-	if (hysteresis_config.returning_state == -1 && hysteresis_config.hysteresis > 0) return;
+	if (hysteresis_config.returning_state == INVALID_STATE &&
+			hysteresis_config.hysteresis != HYSTERESIS_DISABLED)
+		return;
 
 	/* Check if there was a transition */
 	if (next_state.triggering_transition.type != EMPTY)
@@ -142,40 +156,53 @@ void update_hysteresis_thresholds(transition_t next_state, state_machine_params_
 	{
 	case LESS_THAN:
 	case LT_EQUALS:
-		if (params.distance <= hysteresis_config.triggered_transition.threshold.distance - hysteresis_config.hysteresis)
+		/* Subtract hysteresis if approaching from the right */
+		threshold = hysteresis_config
+			.triggered_transition
+			.threshold.distance - hysteresis_config.hysteresis;
+		if (params.distance <= threshold)
 		{
-			hysteresis_config.returning_state = -1;
+			hysteresis_config.returning_state = INVALID_STATE;
 		}
 		break;
 	case GREATER_THAN:
 	case GT_EQUALS:
-		if (params.distance >= hysteresis_config.triggered_transition.threshold.distance + hysteresis_config.hysteresis)
+		/* Add hysteresis if approaching from the left */
+		threshold = hysteresis_config
+			.triggered_transition
+			.threshold.distance + hysteresis_config.hysteresis;
+		if (params.distance >= threshold)
 		{
-			hysteresis_config.returning_state = -1;
+			hysteresis_config.returning_state = INVALID_STATE;
 		}
 		break;
 	default:
 		/* Equals and Not Equals should not have a hysteresis */
-		hysteresis_config.returning_state = -1;
+		hysteresis_config.returning_state = INVALID_STATE;
 		break;
 	}
 }
 
-uint32_t check_transition(state_machine_transition_t transition, state_machine_params_t params)
+uint32_t check_transition(
+	state_machine_transition_t transition,
+	state_machine_params_t params
+)
 {
-	uint32_t hysteresis_is_active = (hysteresis_config.returning_state == transition.next_state);
+	/* Check if the hysteresis is active and apply it */
+	uint8_t is_hysteresis_active = (hysteresis_config.returning_state == transition.next_state);
+	uint32_t hysteresis_adjustment = (is_hysteresis_active ? hysteresis_config.hysteresis : HYSTERESIS_DISABLED);
 	switch(transition.type)
 	{
 	case EQUAL:
 		return params.distance == transition.threshold.distance;
 	case LESS_THAN:
-		return params.distance < transition.threshold.distance - (hysteresis_is_active ? hysteresis_config.hysteresis : 0);
+		return params.distance < transition.threshold.distance - hysteresis_adjustment;
 	case GREATER_THAN:
-		return params.distance > transition.threshold.distance + (hysteresis_is_active ? hysteresis_config.hysteresis : 0);
+		return params.distance > transition.threshold.distance + hysteresis_adjustment;
 	case LT_EQUALS:
-		return params.distance <= transition.threshold.distance - (hysteresis_is_active ? hysteresis_config.hysteresis : 0);
+		return params.distance <= transition.threshold.distance - hysteresis_adjustment;
 	case GT_EQUALS:
-		return params.distance >= transition.threshold.distance + (hysteresis_is_active ? hysteresis_config.hysteresis : 0);
+		return params.distance >= transition.threshold.distance + hysteresis_adjustment;
 	case NOT_EQUALS:
 		return params.distance != transition.threshold.distance;
 	default:
