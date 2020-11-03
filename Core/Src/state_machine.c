@@ -28,8 +28,8 @@ typedef struct
 } state_machine_hysteresis_config_t;
 
 /* Private Variables */
-state_machine_state_t* previous_state;
-state_machine_state_t* current_state;
+state_machine_state_t* previous_state = NULL;
+state_machine_state_t* current_state = NULL;
 state_machine_hysteresis_config_t hysteresis_config =
 {
 	.hysteresis = 0,
@@ -38,7 +38,7 @@ state_machine_hysteresis_config_t hysteresis_config =
 };
 
 /* Primary object for this state machine */
-state_machine_state_t** state_machine;
+state_machine_state_t** state_machine = NULL;
 
 /* Private Functions */
 
@@ -72,6 +72,8 @@ int32_t initialize_state_machine(state_machine_config_t config)
 
 int32_t update_state_machine(state_machine_params_t params)
 {
+	if (state_machine == NULL) return;
+
 	transition_t transition;
 
 	/* Find next state transition and save it */
