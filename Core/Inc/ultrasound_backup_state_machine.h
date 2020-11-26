@@ -1,7 +1,6 @@
 #ifndef _STATE_MACHINE_IMPL_H
 #define _STATE_MACHINE_IMPL_H
 
-#include "main.h"
 #include "state_machine.h"
 
 /* Hysteresis for this state machine in cm */
